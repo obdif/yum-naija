@@ -1,0 +1,172 @@
+// screens/(auth)/GetStartedScreen.tsx
+import React, { useState, useRef, useEffect } from 'react';
+import { View, FlatList, Text, TouchableOpacity, Dimensions, Image, StyleSheet, SafeAreaView, Animated } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width, height } = Dimensions.get('window');
+
+const slides = [
+  {
+    id: '1',
+    title: 'Welcome to NaijaPlate',
+    description: 'Discover a world of delicious recipes from Nigeria and beyond.',
+    image: require('../../assets/images/foods/jollof.png'),
+  },
+  {
+    id: '2',
+    title: 'Explore Local Flavors',
+    description: 'Enjoy authentic Nigerian dishes like Jollof Rice and Egusi Soup.',
+    image: require('../../assets/images/foods/fried-rice.png'),
+  },
+  {
+    id: '3',
+    title: 'Share Your Recipes',
+    description: 'Join a community to share and rate recipes with other food lovers.',
+    image: require('../../assets/images/foods/white-rice.png'),
+  },
+  {
+    id: '4',
+    title: 'Get Started',
+    description: 'Ready to cook? Let’s begin your culinary journey!',
+    image: require('../../assets/images/foods/jollof.png'),
+  },
+];
+
+const GetStartedScreen = () => {
+  const navigation = useNavigation();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const scrollX = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Animate background gradient
+    Animated.loop(
+      Animated.timing(scrollX, {
+        toValue: 1,
+        duration: 5000,
+        useNativeDriver: false,
+      })
+    ).start();
+  }, [scrollX]);
+
+  const renderSlide = ({ item }: { item: typeof slides[0] }) => (
+    <View style={styles.slide}>
+      <Text style={styles.title}>{item.title}</Text>
+      <Text style={styles.description}>{item.description}</Text>
+      <Image source={item.image} style={styles.image} />
+      {item.id === '4' && (
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('login' as never)}
+        >
+          <Text style={styles.buttonText}>Get Started</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  const gradientColors = scrollX.interpolate({
+    inputRange: [0, 1],
+    outputRange: [['#FFF5E1', '#FFDAB9'], ['#FFDAB9', '#FFE4B5']],
+  });
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <LinearGradient
+        colors={['#FFF5E1', '#FFDAB9']}
+        style={styles.container}
+      >
+        <FlatList
+          data={slides}
+          renderItem={renderSlide}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            { useNativeDriver: false, listener: (event) => {
+              const slideIndex = Math.round(event.nativeEvent.contentOffset.x / width);
+              setCurrentSlide(slideIndex);
+            }}
+          )}
+          keyExtractor={(item) => item.id}
+          scrollEventThrottle={16}
+        />
+        <View style={styles.dotContainer}>
+          {slides.map((_, index) => (
+            <View
+              key={index}
+              style={[styles.dot, currentSlide === index && styles.activeDot]}
+            />
+          ))}
+        </View>
+      </LinearGradient>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: 'transparent', // Transparent status bar
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  slide: {
+    width,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4A2C2A',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  description: {
+    fontSize: 16,
+    color: '#4A2C2A',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  image: {
+    width: '80%',
+    height: 200,
+    resizeMode: 'contain',
+    marginBottom: 20,
+  },
+  button: {
+    padding: 12,
+    backgroundColor: '#D35400',
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  dotContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    padding: 10,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#A9A9A9',
+    marginHorizontal: 5,
+  },
+  activeDot: {
+    backgroundColor: '#D35400',
+    width: 12,
+    height: 12,
+  },
+});
+
+export default GetStartedScreen;
